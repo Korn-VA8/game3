@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Jelly Pop — затягивающий шутер с живыми желейками!">
+  <title>Jelly Pop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="ui-overlay">
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div id="hud-score">0</div>
+      <div id="hud-right">
+        <button id="btn-settings" class="hud-btn" title="Настройки">⚙️</button>
+      </div>
+    </div>
+
+    <!-- Shot counter (bottom) -->
+    <div id="shot-counter" class="hidden">
+      <div id="shot-count">5</div>
+      <div id="shot-label">до ряда</div>
+    </div>
+
+    <!-- Swap indicator -->
+    <div id="swap-hint" class="hidden">
+      <span>⇄</span>
+    </div>
+
+    <!-- Booster Bar -->
+    <div id="booster-bar" class="hidden">
+      <button class="booster-btn" data-booster="bomb" id="btn-booster-bomb">
+        <span class="booster-icon">💣</span>
+        <span class="booster-count" id="count-bomb">0</span>
+      </button>
+      <button class="booster-btn" data-booster="rainbow" id="btn-booster-rainbow">
+        <span class="booster-icon">🌈</span>
+        <span class="booster-count" id="count-rainbow">0</span>
+      </button>
+      <button class="booster-btn" data-booster="lightning" id="btn-booster-lightning">
+        <span class="booster-icon">⚡</span>
+        <span class="booster-count" id="count-lightning">0</span>
+      </button>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="menu-screen" class="screen">
+      <div class="menu-title">JELLY POP</div>
+      <div class="menu-subtitle" data-i18n="subtitle">Лопни их всех!</div>
+      <button id="btn-play" class="btn btn-primary pulse" data-i18n="play">ИГРАТЬ</button>
+    </div>
+
+    <!-- Tutorial -->
+    <div id="tutorial-screen" class="screen hidden">
+      <div class="popup">
+        <div class="tutorial-icon">👆</div>
+        <div class="popup-title">Как играть</div>
+        <div class="tutorial-text">
+          Зажми и тяни чтобы прицелиться.<br>
+          Отпусти чтобы стрелять!<br><br>
+          🎯 <b>3+ одного цвета</b> — лопнуть!<br>
+          ⇄ <b>Тап ниже</b> — сменить шарик
+        </div>
+        <button id="btn-tutorial-ok" class="btn btn-primary">ПОНЯЛ! 👍</button>
+      </div>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameover-screen" class="screen hidden">
+      <div class="popup">
+        <div class="popup-title" data-i18n="jellies_sad">🥺 Желейки расстроились!</div>
+        <div id="gameover-score" class="popup-score"></div>
+        <div class="popup-sub" data-i18n="so_close">Ты был(а) так близко!</div>
+        <button id="btn-rescue" class="btn btn-primary pulse" data-i18n="rescue">
+          ▶ СПАСТИ ЖЕЛЕЕК!<br><small>Убрать 3 ряда 🎁</small>
+        </button>
+        <button id="btn-restart" class="btn btn-secondary" data-i18n="restart">начать заново →</button>
+      </div>
+    </div>
+
+    <!-- Fortune Wheel -->
+    <div id="wheel-screen" class="screen hidden">
+      <div class="popup wheel-popup">
+        <div class="popup-title">🎡 Колесо фортуны!</div>
+        <div class="wheel-container">
+          <canvas id="wheel-canvas" width="280" height="280"></canvas>
+          <div class="wheel-pointer">▼</div>
+        </div>
+        <div id="wheel-prize" class="wheel-prize hidden"></div>
+        <button id="btn-spin" class="btn btn-primary pulse">КРУТИТЬ! 🎰</button>
+        <button id="btn-spin-ad" class="btn btn-primary hidden">
+          ▶ ЕЩЁ РАЗ!<br><small>Бесплатно! 🎁</small>
+        </button>
+        <button id="btn-wheel-close" class="btn btn-secondary hidden">продолжить →</button>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-screen" class="screen hidden">
+      <div class="popup">
+        <div class="popup-title">⚙️ Настройки</div>
+        <div class="settings-row">
+          <span>🔊 Звук</span>
+          <button id="btn-sound-toggle" class="settings-toggle on">ВКЛ</button>
+        </div>
+        <button id="btn-settings-close" class="btn btn-primary" style="margin-top:16px;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
