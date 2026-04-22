@@ -108,10 +108,17 @@ export function drawJelly(ctx, x, y, bubble, pointerX, pointerY, activeBooster =
     ctx.scale(scale, scale);
     // During squeeze phase, close eyes
     const popEmotion = bubble.popProgress < 0.3 ? EMOTION.HAPPY : EMOTION.POP;
+    const isBlinking = bubble.popProgress < 0.3;
+    
     drawJellyBody(ctx, 0, 0, r, color);
+    drawFrogEyeBumps(ctx, 0, 0, r, color);
     drawJellyInner(ctx, r, color);
-    drawEyes(ctx, r, popEmotion, bubble.popProgress < 0.3, 0, 0);
-    drawMouth(ctx, r, popEmotion);
+    drawFrogBelly(ctx, 0, 0, r, color);
+    drawHighlight(ctx, r);
+    drawFrogCheeks(ctx, 0, 0, r);
+    drawFrogEyes(ctx, 0, 0, r, popEmotion, isBlinking, 0, 0);
+    drawFrogMouth(ctx, 0, 0, r, popEmotion);
+    
     ctx.restore();
     return;
   }
@@ -131,14 +138,60 @@ export function drawJelly(ctx, x, y, bubble, pointerX, pointerY, activeBooster =
 
 function drawFullJelly(ctx, x, y, r, bubble, color, emotion, dx, dy, activeBooster) {
   drawJellyBody(ctx, x, y, r, color);
+  drawFrogEyeBumps(ctx, x, y, r, color); // Draw bumps over body to blend perfectly
   drawJellyInner(ctx, r, color);
+  drawFrogBelly(ctx, x, y, r, color);
   drawHighlight(ctx, r);
   if (activeBooster) {
     drawBoosterIcon(ctx, x, y, r, activeBooster);
   } else {
-    drawEyes(ctx, r, emotion, bubble.isBlinking, dx, dy);
-    drawMouth(ctx, r, emotion);
+    drawFrogCheeks(ctx, x, y, r);
+    drawFrogEyes(ctx, x, y, r, emotion, bubble.isBlinking, dx, dy);
+    drawFrogMouth(ctx, x, y, r, emotion);
   }
+}
+
+function drawFrogEyeBumps(ctx, x, y, r, color) {
+  const eyeR = r * 0.16; // Small, subtle bumps
+  const eyeOffsetX = r * 0.35; // Exactly matching eyeSpacing
+  const eyeOffsetY = -r * 0.55; // Exactly matching eyeY
+  
+  // Use the same gradient as the body to blend seamlessly
+  const grad = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 0, x, y, r);
+  grad.addColorStop(0, colorWithAlpha(color.jelly, 0.45));
+  grad.addColorStop(0.6, colorWithAlpha(color.jelly, 0.3));
+  grad.addColorStop(1, colorWithAlpha(color.jelly, 0.1));
+  
+  ctx.fillStyle = grad;
+  
+  // Left bump
+  ctx.beginPath();
+  ctx.arc(x - eyeOffsetX, y + eyeOffsetY, eyeR, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Right bump
+  ctx.beginPath();
+  ctx.arc(x + eyeOffsetX, y + eyeOffsetY, eyeR, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawFrogBelly(ctx, x, y, r, color) {
+  ctx.fillStyle = lighten(color.bubble, 50);
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.ellipse(x, y + r * 0.4, r * 0.6, r * 0.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1.0;
+}
+
+function drawFrogCheeks(ctx, x, y, r) {
+  ctx.fillStyle = 'rgba(255, 105, 180, 0.4)'; // Soft pink
+  ctx.beginPath();
+  ctx.ellipse(x - r * 0.4, y - r * 0.35, r * 0.12, r * 0.06, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + r * 0.4, y - r * 0.35, r * 0.12, r * 0.06, 0.1, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawBoosterIcon(ctx, x, y, r, boosterType) {
@@ -187,90 +240,96 @@ function drawHighlight(ctx, r) {
   ctx.fill();
 }
 
-function drawEyes(ctx, r, emotion, blinking, dx, dy) {
-  const eyeSpacing = r * 0.28;
-  const eyeY = -r * 0.1;
-  const eyeR = r * 0.15;
+function drawFrogEyes(ctx, x, y, r, emotion, blinking, dx, dy) {
+  const eyeSpacing = r * 0.35;
+  const eyeY = -r * 0.55; // Eyes high up, near the bumps
+  const eyeR = r * 0.1; // Dark dot size
 
   const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-  const followX = (dx / dist) * eyeR * 0.35;
-  const followY = (dy / dist) * eyeR * 0.35;
+  const followX = (dx / dist) * eyeR * 0.3;
+  const followY = (dy / dist) * eyeR * 0.3;
 
   for (const side of [-1, 1]) {
-    const ex = eyeSpacing * side;
-    const ey = eyeY;
+    const ex = x + eyeSpacing * side;
+    const ey = y + eyeY;
 
-    ctx.beginPath();
     if (blinking) {
-      ctx.ellipse(ex, ey, eyeR, eyeR * 0.12, 0, 0, Math.PI * 2);
-    } else if (emotion === EMOTION.SURPRISED) {
-      ctx.arc(ex, ey, eyeR * 1.3, 0, Math.PI * 2);
-    } else if (emotion === EMOTION.SCARED) {
-      ctx.arc(ex, ey - 1, eyeR * 1.15, 0, Math.PI * 2);
-    } else if (emotion === EMOTION.SAD) {
-      ctx.arc(ex, ey + 1, eyeR * 0.9, 0, Math.PI * 2);
-    } else {
-      ctx.arc(ex, ey, eyeR, 0, Math.PI * 2);
-    }
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-
-    if (!blinking) {
       ctx.beginPath();
-      const pupilR = eyeR * 0.55;
+      ctx.moveTo(ex - eyeR, ey);
+      ctx.lineTo(ex + eyeR, ey);
+      ctx.strokeStyle = '#1a1a2e';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
       let py = ey + followY;
+      let px = ex + followX;
       if (emotion === EMOTION.SCARED) py = ey + eyeR * 0.2;
       if (emotion === EMOTION.SAD) py = ey + eyeR * 0.25;
-      ctx.arc(ex + followX, py, pupilR, 0, Math.PI * 2);
+
+      ctx.beginPath();
+      if (emotion === EMOTION.SURPRISED) {
+        ctx.arc(px, py, eyeR * 1.2, 0, Math.PI * 2);
+      } else {
+        ctx.arc(px, py, eyeR, 0, Math.PI * 2);
+      }
       ctx.fillStyle = '#1a1a2e';
       ctx.fill();
 
+      // Big cute glint
       ctx.beginPath();
-      ctx.arc(ex + followX + pupilR * 0.3, py - pupilR * 0.3, pupilR * 0.3, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.arc(px + eyeR * 0.15, py - eyeR * 0.2, eyeR * 0.35, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.fill();
     }
   }
 }
 
-function drawMouth(ctx, r, emotion) {
-  const my = r * 0.2;
+function drawFrogMouth(ctx, x, y, r, emotion) {
+  const my = y - r * 0.4; // Moved mouth up between the eyes
   ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1a1a2e';
 
   switch (emotion) {
     case EMOTION.IDLE:
+    case EMOTION.HAPPY:
+      // Tiny cute 'W'
       ctx.beginPath();
-      ctx.arc(0, my, r * 0.12, 0, Math.PI);
-      ctx.strokeStyle = '#1a1a2e';
+      ctx.moveTo(x - r * 0.12, my);
+      ctx.quadraticCurveTo(x - r * 0.06, my + r * 0.08, x, my + r * 0.02);
+      ctx.quadraticCurveTo(x + r * 0.06, my + r * 0.08, x + r * 0.12, my);
       ctx.stroke();
       break;
-    case EMOTION.HAPPY:
     case EMOTION.POP:
+      // Tiny open mouth
       ctx.beginPath();
-      ctx.arc(0, my - 1, r * 0.2, 0, Math.PI);
-      ctx.strokeStyle = '#1a1a2e';
-      ctx.lineWidth = 2;
+      ctx.moveTo(x - r * 0.1, my);
+      ctx.quadraticCurveTo(x, my + r * 0.05, x + r * 0.1, my);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.08, my + r * 0.02);
+      ctx.quadraticCurveTo(x, my + r * 0.15, x + r * 0.08, my + r * 0.02);
+      ctx.fillStyle = '#FF4757';
+      ctx.fill();
       ctx.stroke();
       break;
     case EMOTION.SURPRISED:
       ctx.beginPath();
-      ctx.arc(0, my + 2, r * 0.08, 0, Math.PI * 2);
+      ctx.ellipse(x, my + r * 0.05, r * 0.05, r * 0.07, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#1a1a2e';
       ctx.fill();
       break;
     case EMOTION.SCARED:
       ctx.beginPath();
-      ctx.moveTo(-r * 0.12, my + 2);
-      ctx.quadraticCurveTo(-r * 0.06, my, 0, my + 2);
-      ctx.quadraticCurveTo(r * 0.06, my + 4, r * 0.12, my + 2);
-      ctx.strokeStyle = '#1a1a2e';
+      ctx.moveTo(x - r * 0.12, my + r * 0.05);
+      ctx.quadraticCurveTo(x - r * 0.06, my, x, my + r * 0.05);
+      ctx.quadraticCurveTo(x + r * 0.06, my + r * 0.1, x + r * 0.12, my + r * 0.05);
       ctx.stroke();
       break;
     case EMOTION.SAD:
       ctx.beginPath();
-      ctx.arc(0, my + r * 0.1, r * 0.1, Math.PI, 0);
-      ctx.strokeStyle = '#1a1a2e';
+      ctx.moveTo(x - r * 0.12, my + r * 0.1);
+      ctx.quadraticCurveTo(x, my, x + r * 0.12, my + r * 0.1);
       ctx.stroke();
       break;
   }
@@ -352,7 +411,6 @@ export function drawTrail(ctx, color) {
 export function drawShooterBubble(ctx, x, y, bubble, time, activeBooster = null) {
   if (!bubble) return;
   const r = R;
-  const innerR = r * 0.6;
 
   // Pulsing ring
   const ringPulse = 1 + Math.sin(time * 3) * 0.08;
@@ -368,36 +426,8 @@ export function drawShooterBubble(ctx, x, y, bubble, time, activeBooster = null)
   ctx.fillStyle = colorWithAlpha(bubble.color.jelly, 0.12);
   ctx.fill();
 
-  // Jelly body
-  const grad = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 0, x, y, r);
-  grad.addColorStop(0, colorWithAlpha(bubble.color.jelly, 0.45));
-  grad.addColorStop(1, colorWithAlpha(bubble.color.jelly, 0.15));
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-  ctx.strokeStyle = colorWithAlpha(bubble.color.bubble, 0.3);
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  // Inner bubble
-  const inner = ctx.createRadialGradient(x - innerR * 0.3, y - innerR * 0.3, 0, x, y, innerR);
-  inner.addColorStop(0, lighten(bubble.color.bubble, 40));
-  inner.addColorStop(1, bubble.color.bubble);
-  ctx.beginPath();
-  ctx.arc(x, y, innerR, 0, Math.PI * 2);
-  ctx.fillStyle = inner;
-  ctx.fill();
-
-  // Glint
-  ctx.beginPath();
-  ctx.ellipse(x - r * 0.25, y - r * 0.3, r * 0.18, r * 0.1, -0.5, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.fill();
-
-  if (activeBooster) {
-    drawBoosterIcon(ctx, x, y, r, activeBooster);
-  }
+  // Draw the frog body for the shooter!
+  drawFullJelly(ctx, x, y, r, bubble, bubble.color, EMOTION.IDLE, 0, 0, activeBooster);
 }
 
 // ===== UTILS =====
